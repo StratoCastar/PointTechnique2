@@ -1,0 +1,121 @@
+1) Spring Boot and Docker on Windows
+
+a) install Docker https://docs.docker.com/toolbox/toolbox_install_windows/ ( check the option to use old VirtualBox Driver if unchecked )
+b) Init Spring boot Project with the web starter
+c) Install VSCode Docker Extension ( Launch VS Code with Admin ) 
+d) Create Hello World Mapping 
+e) Create DockerFile
+	FROM openjdk:8-jdk-alpine
+	ARG JAR_FILE=target/*.jar
+	COPY ${JAR_FILE} app.jar
+	ENTRYPOINT ["java","-jar","/app.jar"]
+f) docker build -t pointtechnique/spring-boot-docker . 
+	Alternative : ./mvnw com.google.cloud.tools:jib-maven-plugin:dockerBuild -Dimage=pointtechnique/spring-boot-docker
+	Alternative static : add this to pom.xml 
+	
+		<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>2.1.0</version>
+				<configuration>
+					<to>
+						<image>pointtechnique/spring-boot-docker</image>
+					</to>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>dockerBuild</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			
+			Then simply mvn package
+	
+g) docker run -p 8080:8080 -t pointtechnique/spring-boot-docker
+
+Alternative : 
+
+1) Ctrl+Shift+P¨: Docker : Add Docker Image to the workspace
+	a) select Java
+	b) Name of the target
+	c) select port
+	d) Behold generation of docker.compose, docker ignore , docker file
+	
+2) Ctrl+Shift+P : Dockage : Images Build Image
+
+TRICK : 
+
+You may need to add a redirection port on virtualbox to be able to access your local application via "LOCALHOST" https://www.jhipster.tech/tips/020_tip_using_docker_containers_as_localhost_on_mac_and_windows.html
+
+OR
+
+use de default dockerMachine : http://192.168.99.100:8080/
+
+
+II) Building the application
+
+1) Sushi Back with spring Data Rest
+	a) database is at jdbc:h2:mem:testdb
+2) Simple Sushi Front with Thymeleaf
+3) Resto Back
+with 
+	JPA / H2 / Lombok / Sprign Data Rest 
+4)create resto
+5) HAL : HypertextApplicationLanguage
+6) make SushiBack, Call RestoBack
+7) Test
+
+
+III) Service discovery 
+
+1) new spring boot project
+2) eurka server as dependency
+3) @EnableEurekaServer
+4) properties : 
+
+server.port=9000
+
+eureka.client.register-with-eureka=false
+eureka.client.fetch-registry=false
+
+logging.level.com.netflix.eureka=OFF
+logging.level.com.netflix.discovery=OFF
+
+5) add eureka client dependency to resto back and sushi back  ( and actuator ) 
+6) add configuration 
+
+management.endpoints.web.exposure.include=*
+eureka.client.serviceUrl.defaultZone=${EUREKA_SERVER:http://localhost:8761/eureka}
+spring.application.name=sushi-*
+
+
+
+7) Check eureka's ui
+8) Modifier le controller pour appeler Eureka pour récupérer le host et le port 
+9) Lancer une seconde instance de Resto Back, constater le round robin, puis killer une instance
+
+10) Pour le front , appel à l'API Eureka
+
+
+VI) Service Configuration
+
+1) New springboot project 
+2) config server + eureka
+3) @EnableConfigServer
+4) properties : 
+
+spring.application.name=sushiconfig
+server.port=8000
+spring.profiles.active=native
+spring.cloud.config.server.native.searchLocations=.
+eureka.client.serviceUrl.defaultZone=${EUREKA_SERVER:http://localhost:9000/eureka}
+ 
+
+
